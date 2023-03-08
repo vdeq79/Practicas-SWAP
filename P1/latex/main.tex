@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{tikz}
+\usepackage{centernot}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+\newcommand{\enquote}[1]{``#1''}
+\usepackage{float}
+\usepackage[parfill]{parskip}
+\newcommand{\image}[2]{
+\begin{figure}[H]
+    \includegraphics[width=#1 cm]{../images/#2.png}
+    \centering
+\end{figure}
+}
+
+\title{Práctica 1 SWAP}
+\author{XuSheng Zheng}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Instalación de máquinas virtuales}
+Comenzamos con la instalación de las máquinas virtuales, puesto que vamos a realizar el mismo procedimiento en ambas máquinas, vamos a centrarnos en la configuración de una de ellas:
+\image{8}{1}
+Le damos 4GB de RAM y 10 GB de disco duro:
+\image{8}{2}
+\image{8}{3}
+Vamos a instalar Ubuntu Server, en mi caso, será la 20.04:
+\image{8}{4}
+Arrancamos e introducimos nuestros datos:
+\image{10}{5}
+Dejamos también que nos instale SSH:
+\image{10}{6}
+
+\subsection{Instalación de Apache+PHP+MySQL}
+Una vez instalado la máquina virtual, instalamos Apache, PHP y MySQL:
+\image{10}{7}
+Una vez finalizada la instalación comprobamos:
+\image{10}{8}
+Podemos ver que el servidor está inactivo, lo activamos:
+\image{10}{9}
+De mismo modo con MySQL:
+\image{10}{10}
+
+Activamos el adaptador NAT y solo-anfitrión:
+\image{8}{11}
+\image{8}{12}
+Podemos usar el comando \textbf{ipconfig} en el anfitrión para ver la puerta de enlace:
+\image{8}{13}
+
+\end{document}
