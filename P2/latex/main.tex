@@ -46,85 +46,73 @@
 \newpage
 
 \section{Copia de archivos}
-En primer lugar vamos a crear un un directorio local:
+En primer lugar vamos a crear un directorio local en m1:
 \image{8}{1}
-Vamos a mandar este directorio a m2 mediante \textbf{tar} y \textbf{ssh}:
+Vamos a enviar este directorio a m2 mediante \textbf{tar} y \textbf{ssh}:
 \image{8}{2}
-Comprobamos descomprimiento el archivo tar:
+Comprobamos descomprimiendo el archivo tar:
 \image{8}{3}
-Esto también lo podemos llevar a cabo mediante scp, puesto que habíamos configurado \textbf{SSH} en el puerto 2222, necesitamos indicarlo con el argumento \textbf{-P}:
+Esto también lo podemos llevar a cabo mediante scp. Puesto que habíamos configurado \textbf{SSH} en el puerto 2222, necesitamos indicarlo con el argumento \textbf{-P}:
 \image{8}{4}
 
-\section{rsync}
-En este apartado vamos a utilizar \textbf{rsync} para sincronizar ambas máquinas (de m1 a m2). En este caso, la herramienta ya esta instalada por defecto. En primer lugar, necesitamos dar privilegio a los usuarios sobre la carpeta donde están los archivos del servidor web:
+\section{RSync}
+En este apartado vamos a utilizar \textbf{rsync} para sincronizar ambas máquinas (de m1 a m2). En este caso, la herramienta ya está instalada por defecto. En primer lugar, necesitamos dar privilegio al usuario sobre la carpeta donde están los archivos del servidor web:
 \image{6}{5}
 Para probar, vamos a sincronizar la carpeta anterior:
 \image{8}{7}
 Podemos ver que en este caso no ha sido posible transferir la carpeta porque no tenemos permiso para escribir sobre ella. Si examinamos la carpeta \textit{/var} en m2:
 \image{8}{8}
-nos damos cuenta de que sólo root tiene permiso para escribir sobre ella. Podemos retorgar el permiso al usuario en m2 también:
+nos damos cuenta de que sólo root tiene permiso para escribir sobre ella. Podemos otorgar el permiso al usuario en m2 también:
 \image{6}{6}
 Y volvemos a intentar:
 \image{8}{9}
-podemos ver que ahora sí se ha sincronizado correctamente.
+Podemos ver que ahora sí se ha sincronizado correctamente.
 \subsection{Opciones avanzadas}
-En la sincronización que hemos visto anteriormente se ha utilizado los siguientes argumentos:
+En la sincronización que hemos realizado anteriormente se ha utilizado los siguientes argumentos:
 \begin{itemize}
     \item \textbf{-a}: la transferencia se realiza en modo archivo, lo que asegura que los permisos, atributos, enlaces, etc se preserven y que la transferencia sea recursiva.
     \item \textbf{-v}: modo verbose, para dar más información.
     \item \textbf{-z}: comprime los archivos durante la transferencia.
     \item \textbf{-e}: determina el shell remoto a utilizar.
 \end{itemize}
-Como opciones avanzadas vamos a utilizar \textbf{--exclude} para excluir que se copie la carpeta \textit{/var/www/img} que vamos a crear, además vamos a copiar un archivo txt en \textit{/var/www} para eliminarlo después:
+Como opciones avanzadas vamos a utilizar \textbf{--exclude} para evitar que se copie la carpeta \textit{/var/www/img} que vamos a crear, además vamos a copiar un archivo txt en \textit{/var/www} para eliminarlo después:
 \image{8}{10}
 Podemos ver que ha excluido la carpeta \textit{/var/www/img} de la sincronización y sólo ha sincronizado el archivo txt. Ahora vamos a eliminar este archivo txt y probar con la opción \textbf{--delete}:
 \image{8}{11}
 Podemos ver que como se ha eliminado el archivo en la máquina origen, también se ha borrado en la máquina destino.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\iffalse
-\section{Instalación de máquinas virtuales}
-Comenzamos con la instalación de las máquinas virtuales. Puesto que vamos a hacer lo mismo en ambas máquinas, vamos a centrarnos en la configuración de una de ellas:
-\image{8}{1}
-Le damos 4GB de RAM y 10 GB de disco duro:
+\section{SSH}
+En la práctica anterior, ya se configuró \textbf{ssh} para permitir el acceso sin contraseña utilizando \textbf{ssh-keygen} y \textbf{ssh-copy-id}. Para este apartado, vamos a borrar las claves y volver a generarlas:
+\image{6}{12}
+Además necesitamos eliminar los contenidos de los archivos \textit{.ssh/known\textunderscore hosts} y \textit{.ssh/authorized\textunderscore keys}:
+\image{6}{16}
+Ahora al intentar conectar nos pedirá la contraseña:
+\image{8}{17}
+Vamos a generar las nuevas claves de tipo \textbf{rsa} y 4096 bits en ambas máquinas:
 \begin{figure}[H]
     \centering
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=7cm]{../images/2.png}
+        \includegraphics[width=7cm]{../images/13.png}
     \end{subfigure}%
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=7cm]{../images/3.png}
+        \includegraphics[width=7cm]{../images/14.png}
     \end{subfigure}
 \end{figure}
-\fi
+Ahora en lugar de utilizar \textbf{ssh-copy-id} vamos a utilizar \textbf{scp} para copiar la clave pública de una máquina al archivo \textit{.ssh/authorized\textunderscore keys} de otra:
+\image{8}{18}
+Comprobamos conectando desde m1 a m2:
+\image{8}{19}
+Como podemos observar, no nos ha pedido la contraseña.
+
+\section{Crontab}
+Para que se sincronice el directorio \textit{/var/www} entre las dos máquinas en cada hora,  editamos el archivo \textit{/etc/crontab} como sigue:
+\image{8}{20}
+De forma que en el minuto 0 de cada hora se va a ejecutar \textbf{rsync}.
+\subsection{Opciones avanzadas}
+Aparte del \textbf{*} para indicar todos los valores, también podemos usar entre otras opciones: \textbf{-} para indicar el rango de tiempo y \textbf{/} para indicar el salto de tiempo. En el siguiente ejemplo, vamos a utilizar \textbf{crontab} para escribir la hora en un archivo en cada 90 minutos empezando por la media noche:
+\image{8}{21}
 
 \newpage
 \section{Bibliografía}
@@ -134,10 +122,7 @@ Le damos 4GB de RAM y 10 GB de disco duro:
     \item \url{https://serverfault.com/questions/141773/what-is-archive-mode-in-rsync}
     \item \url{https://ss64.com/bash/rsync.html}
     \item \url{https://linux.die.net/man/1/rsync}
-    
-
-    \item \url{https://www.ionos.com/help/server-cloud-infrastructure/getting-started/important-security-information-for-your-server/changing-the-default-ssh-port/}
-    \item \url{https://www.ibm.com/support/pages/configuring-ssh-login-without-password}
+    \item \url{https://serverfault.com/questions/123629/run-task-every-90-minutes-with-cron}
 \end{itemize}
 
 \end{document}
