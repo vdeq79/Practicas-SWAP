@@ -123,6 +123,89 @@ Para comprobar el funcionamiento del balanceo por IP, mandamos peticiones desde 
 \image{6}{22}
 Podemos apreciar que todas las peticiones son atendidas por m1 pues provienen del mismo IP.
 
+\section{Módulo de estadísticas}
+Para habilitar el módulo de estadísticas de Haproxy, añadimos las siguientes líneas al archivo \textit{/etc/haproxy\\/haproxy.cfg}:
+\image{8}{23}
+Reiniciamos el servicio y ahora podemos acceder a través de la url \textit{http://192.168.56.72:9999/stats} con el usuario y la contraseña que hemos configurado:
+\image{10}{24}
+Para poder testear el módulo de estadísticas, deshabilitamos de momento el balanceo por IP:
+\image{8}{25}
+Tras reiniciar el servicio lanzamos varias peticiones al balanceador y observamos los datos recogidos por el módulo son correctos:
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.3\textwidth}
+        \centering
+        \includegraphics[width=4.5cm]{../images/26.png}
+    \end{subfigure}%
+    \begin{subfigure}{.7\textwidth}
+        \centering
+        \includegraphics[width=10.5cm]{../images/27.png}
+    \end{subfigure}
+\end{figure}
+En particular se verifica que m1 haya servido 4 de las 5 peticiones.
+\subsection{Opciones avanzadas}
+Para que la página de estadísticas se actualice automáticamente podemos usar \textbf{stats refresh} con el periodo de tiempo con el que queremos que se actualice. Para limitar el número de conexiones a la página podemos usar \textbf{stats maxconn} y se puede establecer un timeout mediante \textbf{stats timeout}. 
+
+En el siguiente ejemplo establecemos un refresco de página por cada 10 segundos, un timeout de 30 segundos y un número máximo de 5 conexiones:
+\image{8}{28}
+
+\section{Go-Between}
+Para evitar conflictos, deshabilitamos los balanceadores anteriores e instalamos \textbf{go-between} mediante \textbf{sudo snap install gobetween --edge}. Una vez instalado comprobamos el estado del servicio:
+\image{8}{29}
+Para configurar el algoritmo roundrobin editamos el archivo \textit{/var/snap/gobetween/common/gobetween.toml} como sigue:
+\image{6}{30}
+Además, para evitar errores, se ha desactivado el servidor de API REST y el servidor de ejemplo para UDP:
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=7cm]{../images/31.png}
+    \end{subfigure}%
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=7cm]{../images/32.png}
+    \end{subfigure}
+\end{figure}
+Para efectuar la configuración ejecutamos lo siguiente:
+\image{8}{33}
+Y comprobamos desde el anfitrión:
+\image{8}{34}
+\subsection{Opciones avanzadas}
+\textbf{go-between} también permite el balanceo por IP mediante la opción \textbf{balance=\enquote{iphash}} así como ponderación mediante \textbf{balance=\enquote{weight}}. Para seguir el mismo esquema de los anteriores balanceadores damos el doble de carga para m1:
+\image{6}{35}
+Lanzamos el servicio y comprobamos desde el anfitrión:
+\image{8}{36}
+A diferencia de los anteriores balanceadores, que determinan el peso de cada máquina en roundrobin, en este caso la ponderación determina la probabilidad de ser elegida para servir una petición. Lo que implica que no tenemos asegurado que de las 3 peticiones, 2 vayan a ser servidas por m1.
+Para controlar el estado de los servidores finales, \textbf{go-between} hace uso del apartado \textbf{healthcheck}. Veamos con el siguiente ejemplo:
+\image{6}{37}
+Con esta configuración estamos indicando que se realice un chequeo sobre el estado de los servidores por cada 5 segundos mediante conexiones por \textbf{ping}. Si una conexión no se establece en 500 ms se considera una pérdida. Tras 3 pérdidas, se considerará que el servidor esta caído. Mientras que 2 conexiones exitosas a un servidor caído se considerará que se ha recuperado.  
+
+Para evitar conflicto con el siguiente balanceador, deshabilitamos \textbf{gobetween} con el comando \textbf{sudo snap disable gobetween}.
+
+\section{Pound}
+Actualmente no se puede instalar \textbf{pound} mediante \textbf{apt-get}, pero se ha encontrado un repositorio que almacena archivos para la instalación \textbf{pound}. Dado que la versión de nuestro Ubuntu es la 18, la versión de \textbf{pound} que nos funciona es la 2.6.
+
+Por tanto, descargamos el archivo \textit{pound\_2.6-2\_amd64.deb} de \url{http://old.kali.org/kali/pool/main/p/pound/} con el comando \textbf{curl -O http://old.kali.org/kali/pool/main/p/pound/pound\_2.6-2\_amd64.deb} e instalamos el paquete con \textbf{sudo dpkg -i pound\_2.6-2\_amd64.deb}. Una vez instalado podemos comprobar su estado:
+\image{8}{38}
+Para configurar, editamos el archivo \textit{/etc/pound/pound.cfg}:
+\image{8}{39}
+Al reiniciar el servicio nos pide que añadamos \textbf{startup=1} al documento \textit{/etc/default/pound}:
+\image{8}{40}
+Lo añadimos y reiniciamos el servicio.
+\image{8}{41}
+\image{8}{42}
+Comprobamos que funciona correctamente desde el anfitrión:
+\image{8}{43}
+También podemos otorgar más prioridad para una máquina que otra:
+\image{8}{44}
+\subsection{Opciones avanzadas}
+Para establecer el balanceo por IP podemos utilizar el bloque \textbf{session}, éste nos permite configurar el tiempo máximo en el que se mantiene una sesión, en nuestro caso se ha decidido un margen de 20 minutos:
+\image{8}{45}
+Comprobamos desde el anfitrión:
+\image{8}{46}
+Para controlar el estado de los servidores, se puede configurar las directivas globales \textbf{TimeOut} y \textbf{ConnTO} que establecen el tiempo que espera \textbf{Pound} para una respuesta del servidor y una conexión al servidor respectivamente. Estas directivas se pueden sobreescribir en cada servidor. Además, \textbf{Alive} determina cada cuánto tiempo \textbf{Pound} chequea el estado de los servidores. En nuestro caso asignamos los siguientes valores:
+\image{6}{47}
+
 
 
 \newpage
@@ -133,9 +216,11 @@ Podemos apreciar que todas las peticiones son atendidas por m1 pues provienen de
     \item \url{https://serverfault.com/questions/113637/haproxy-roundrobin-weights}
     \item \url{https://www.haproxy.com/blog/client-ip-persistence-or-source-ip-hash-load-balancing}
     \item \url{https://www.haproxy.com/blog/how-to-enable-health-checks-in-haproxy}
+    \item \url{https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/}
+    \item \url{https://gobetween.io/documentation.html#Static-balancing}
+    \item \url{http://old.kali.org/kali/pool/main/p/pound/}
     
-
-    \item \url{https://serverfault.com/questions/123629/run-task-every-90-minutes-with-cron}
+    \item \url{https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/}
 \end{itemize}
 
 \end{document}
