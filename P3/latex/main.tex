@@ -11,6 +11,7 @@
 \usepackage{fancyhdr}
 \usepackage{lipsum}
 \usepackage{subcaption}
+\usepackage{pgfplots} 
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -206,6 +207,79 @@ Comprobamos desde el anfitrión:
 Para controlar el estado de los servidores, se puede configurar las directivas globales \textbf{TimeOut} y \textbf{ConnTO} que establecen el tiempo que espera \textbf{Pound} para una respuesta del servidor y una conexión al servidor respectivamente. Estas directivas se pueden sobreescribir en cada servidor. Además, \textbf{Alive} determina cada cuánto tiempo \textbf{Pound} chequea el estado de los servidores. En nuestro caso asignamos los siguientes valores:
 \image{6}{47}
 
+\section{Someter a carga la granja web con AB}
+A partir de esta sección, se ha eliminado la configuración respecto al balanceo por IP de todos los balanceadores.
+
+En primer lugar instalamos \textbf{Apache Benchmark} en el anfitrión. Dado que en este caso el anfitrión tiene el sistema operativo Windows, se ha seguido los pasos del videotutorial \url{https://www.youtube.com/watch?v=hUZso9TpEes}.
+
+Una vez instalado probamos solicitar 10000 veces la página \textit{swap.html} en peticiones concurrentes de 10 en 10:
+\image{8}{48}
+Podemos ver que en este caso el tiempo medio por petición es de 50 ms.
+\subsection{Otras opciones}
+Aparte de las opciones \textbf{-n} y \textbf{-c} visto anteriormente, \textbf{ab} tiene otras opciones interesantes:
+\begin{itemize}
+    \item \textbf{-e csv-file}: escribe en un csv el tiempo que se tardó para procesar cada porcentaje de las peticiones totales.
+    \item \textbf{-q}: elimina los mensajes de progreso.
+    \item \textbf{-p, -u file}: permite añadir fichero con datos para peticiones POST y PUT respectivamente. Es necesario usar también la opción \textbf{-T}. 
+    \item \textbf{-t timelimit}: determina el número máximo de segundos para el benchmark.
+\end{itemize}
+Como ejemplo utilizamos el siguiente comando:
+\image{8}{49}
+Podemos ver que en este caso ya no nos muestra el mensaje sobre el número de peticiones completas y si abrimos \textit{ejemplo.csv} tenemos lo siguiente (se muestra sólo una parte del csv):
+\image{6}{50}
+
+\section{Análisis comparativo de los balanceadores}
+A continuación presentamos los resultados de los balanceadores sometiéndolos a una carga de 10000 peticiones concurrentes de 10 en 10. Para cada balanceador se testea tanto con roundrobin como con ponderación con m1 el doble de carga que m2.
+ \begin{center}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Balanceador & Algoritmo & Tiempo total (s) & Peticiones/s & Longest request (ms) \\
+        \hline
+        Nginx & RoundRobin & 57.038 & 175.32 & 563 \\
+        \hline
+        Nginx & Ponderación & 55.867 & 179.00 & 542 \\
+        \hline
+        Haproxy & RoundRobin & 55.960 & 178.70 & 541 \\
+        \hline
+        Haproxy & Ponderación & 53.108 & 188.30 & 538 \\
+        \hline
+        GoBetween & RoundRobin & 51.757 & 193.21 & 545 \\
+        \hline
+        GoBetween & Ponderación & 52.094 & 191.96 & 552 \\
+        \hline
+        Pound & RoundRobin & 53.190 & 188.01 & 543 \\
+        \hline
+        Pound & Ponderación & 52.388 & 190.88 & 538 \\
+        \hline
+    \end{tabular}
+ \end{center}
+
+Puesto que el número de peticiones por segundo se puede obtener a partir del tiempo total, basta con analizar esta última variable. Con los anteriores datos podemos generar el siguientes diagrama de barras:
+\begin{center}
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=.8\textwidth,
+            symbolic x coords={Nginx,Haproxy,GoBetween,Pound,DUMMY},
+            xtick=data, ylabel=Tiempo total (s),
+            legend style={at={(0.5,-0.1)},
+            anchor=north,legend columns=-1},
+            ybar interval=0.7,
+            ymin=0, ymax=60
+        ]
+        \addplot 
+            coordinates {(Nginx,57.038) (Haproxy,55.960) (GoBetween,51.757) (Pound,53.190)      (DUMMY, 0)};
+        \addplot 
+            coordinates {(Nginx,55.867) (Haproxy,53.108) (GoBetween,52.094) (Pound,52.388)      (DUMMY, 0)};    
+        \legend{RoundRobin,Ponderación}
+        \end{axis}
+    \end{tikzpicture}
+\end{center}
+Podemos ver que en nuestro caso, \textbf{GoBetween} es el más rápido para ambos algoritmos, con casi 7 segundos de diferencia respecto de \textbf{Nginx} en el caso de usar RoundRobin.
+
+Cabe destacar que en el caso de \textbf{Nginx} y \textbf{Haproxy} el tiempo con RoundRobin es superior que el tiempo con ponderación y en el caso de \textbf{GoBetween} y \textbf{Pound} ocurre justo lo contrario. Esto puede deber a múltiples factores: retardos debido al sistema operativo del anfitrión, el funcionamiento del propio balanceador u otros motivos desconocidos. Pero lo lógico sería que RoundRobin funcionara mejor que ponderación pues en el caso de ponderación estamos cargando más a m1 cuando ambas máquinas son iguales.
+
+Finalmente, cabe destacar que este análisis no determina la superioridad de un balanceador respecto a los otros, pues se ha analizado solamente datos de un único benchmark para los dos algoritmos. Pero a partir de los resultados, vemos que en nuestro caso, \textbf{GoBetween} tiene el mejor rendimiento y \textbf{Nginx} el peor.
+
 
 
 \newpage
@@ -219,8 +293,11 @@ Para controlar el estado de los servidores, se puede configurar las directivas g
     \item \url{https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/}
     \item \url{https://gobetween.io/documentation.html#Static-balancing}
     \item \url{http://old.kali.org/kali/pool/main/p/pound/}
-    
-    \item \url{https://www.haproxy.com/blog/exploring-the-haproxy-stats-page/}
+    \item \url{https://www.linuxhelp.com/how-to-configure-load-balancer-with-pound-in-ubuntu}
+    \item \url{https://linux.die.net/man/8/pound}
+    \item \url{https://www.apachelounge.com/download/}
+    \item \url{https://www.youtube.com/watch?v=hUZso9TpEes}
+    \item \url{https://httpd.apache.org/docs/2.2/programs/ab.html}
 \end{itemize}
 
 \end{document}
