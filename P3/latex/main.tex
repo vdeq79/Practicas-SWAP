@@ -62,7 +62,7 @@ Ahora procedemos a la configuración: en primer lugar deshabilitamos la funciona
 \image{8}{5}
 Creamos el archivo de configuración \textit{/etc/nginx/conf.d/default.conf} con los siguientes datos:
 \image{8}{6}
-Una vez guardado, reiniciamos el servicio \textbf{nginx}. Para comprobar el funcionamiento del balanceador, se ha modificado el archivo \textit{/var/www/html/swap.html} para que se pueda distinguir las máquinas:
+Una vez guardado, reiniciamos el servicio \textbf{nginx}. Para comprobar el funcionamiento del balanceador, se ha modificado el archivo \textit{/var/www/html/swap.html} para que se puedan distinguir las máquinas:
 \begin{figure}[H]
     \centering
     \begin{subfigure}{.5\textwidth}
@@ -82,15 +82,15 @@ Ahora de cada 3 peticiones, 2 serán atendidas por m1 y 1 por m2:
 \image{8}{9}
 
 \subsection{Opciones avanzadas}
-Para evitar el conflicto de estados y sesiones entre los servidores, \textbf{nginx} permite dirigir las peticiones provenientes de un determinado IP al mismo servidor final mediante la opción \textbf{ip\_hash}. 
+Para evitar conflictos de estados y sesiones entre los servidores, \textbf{nginx} permite dirigir las peticiones provenientes de un determinado IP al mismo servidor final mediante la opción \textbf{ip\_hash}. 
 
-La directiva \textbf{keepalive} determina el número máximo de conexiones a servidores finales que se mantiene en caché y \textbf{keepalive\_requests} determina el número máximo de peticiones que pueden servir a través de estas conexiones, una vez que el número de peticiones exceda el máximo, la conexión se cerrará.
+La directiva \textbf{keepalive} determina el número máximo de conexiones a servidores finales que se mantiene en caché, mientras que \textbf{keepalive\_requests} determina el número máximo de peticiones que se pueden servir a través de estas conexiones. Una vez que el número de peticiones excede el máximo, la conexión se cerrará.
 \image{8}{12}
 Comprobamos el funcionamiento a través del anfitrión:
 \image{8}{13}
 Podemos que en este caso sólo sirve m2 pues estamos enviando a través del mismo IP.
 
-Para gestionar caídas de los servidores podemos usar los comandos \textbf{max\_fails} para especificar el número máximo de intentos de comunicación fallidos antes de considerar al servidor no operativo y \textbf{fail\_timeout} para especificar el periodo de tiempo con el que se considera esos intentos. En el siguiente ejemplo consideramos que el servidor no será operativo si existen 3 intentos fallidos en un periodo de 30 segundos:
+Para gestionar caídas de los servidores podemos utilizar las directivas \textbf{max\_fails} para especificar el número máximo de intentos de comunicación fallidos antes de considerar al servidor no operativo, y \textbf{fail\_timeout} para especificar el periodo de tiempo en el que se considera esos intentos. En el siguiente ejemplo, consideramos que el servidor no será operativo si existen 3 intentos fallidos en un periodo de 30 segundos:
 \image{8}{14}
 
 
@@ -103,7 +103,7 @@ Pasamos ahora a configurar \textbf{haproxy}: añadimos al archivo \textit{/etc/h
 \image{8}{17}
 Reiniciamos el servicio y comprobamos desde el anfitrión:
 \image{6}{18}
-Para dar más peso a determinados servidores, podemos usar la opción \textbf{weight} con números entre 0 y 256 en las líneas de \textbf{server}. Para tener la analogía con el apartado de \textbf{nginx}, asignamos a m1 el doble de carga que m2:
+Para dar más peso a determinados servidores, podemos usar la opción \textbf{weight} con números entre 0 y 256 en las líneas de \textbf{server}. Para establecer una analogía con el apartado de \textbf{nginx}, asignamos a m1 el doble de carga que m2:
 \image{8}{19}
 Y comprobamos:
 \image{6}{20}
@@ -113,13 +113,13 @@ Al igual que \textbf{nginx}, \textbf{haproxy} también permite el balanceo por I
 
 Además, \textbf{haproxy} permite 3 tipos de comprobaciones sobre el estado de los servidores:
 \begin{itemize}
-    \item Activo: por defecto en este caso \textbf{haproxy} intentará establecer una conexión TCP con el servidor final cada 2 segundos. Tras 3 conexiones fallidas se considerará que el servidor está caído y no se le enviará peticiones hasta que consiga 2 conexiones exitosas.
+    \item Activo: por defecto, en este caso, \textbf{haproxy} intentará establecer una conexión TCP con el servidor final cada 2 segundos. Tras 3 conexiones fallidas, se considerará que el servidor está caído y no se le enviarán peticiones hasta que consiga 2 conexiones exitosas.
     \item Pasivo: similar a la opción \textbf{keepalive\_requests} de \textbf{nginx}, establece un límite de errores consecutivos que puede haber antes de dar por caído al servidor.
     \item Agente: mediante un agente externo del servidor final, \textbf{haproxy} puede controlar el estado con el que se encuentra el servidor.
 \end{itemize}
 En el siguiente ejemplo establecemos un máximo de 10 errores:
 \image{8}{21}
-Con \textbf{observe layer7} indicamos que se consideren todas las respuestas HTTP del servidor y con \textbf{on-error mark-down} indicamos que el servidor esta caído cuando se alcance los 10 errores.
+Con \textbf{observe layer7} indicamos que se consideren todas las respuestas HTTP del servidor y con \textbf{on-error mark-down} indicamos que se considere el servidor caído cuando se alcanzan los 10 errores.
 Para comprobar el funcionamiento del balanceo por IP, mandamos peticiones desde el anfitrión:
 \image{6}{22}
 Podemos apreciar que todas las peticiones son atendidas por m1 pues provienen del mismo IP.
@@ -131,7 +131,7 @@ Reiniciamos el servicio y ahora podemos acceder a través de la url \textit{http
 \image{10}{24}
 Para poder testear el módulo de estadísticas, deshabilitamos de momento el balanceo por IP:
 \image{8}{25}
-Tras reiniciar el servicio lanzamos varias peticiones al balanceador y observamos los datos recogidos por el módulo son correctos:
+Tras reiniciar el servicio lanzamos varias peticiones al balanceador y observamos que los datos recogidos por el módulo son correctos:
 \begin{figure}[H]
     \centering
     \begin{subfigure}{.3\textwidth}
@@ -147,13 +147,13 @@ En particular se verifica que m1 haya servido 4 de las 5 peticiones.
 \subsection{Opciones avanzadas}
 Para que la página de estadísticas se actualice automáticamente podemos usar \textbf{stats refresh} con el periodo de tiempo con el que queremos que se actualice. Para limitar el número de conexiones a la página podemos usar \textbf{stats maxconn} y se puede establecer un timeout mediante \textbf{stats timeout}. 
 
-En el siguiente ejemplo establecemos un refresco de página por cada 10 segundos, un timeout de 30 segundos y un número máximo de 5 conexiones:
+En el siguiente ejemplo, establecemos un refresco de página cada 10 segundos, un timeout de 30 segundos y un número máximo de 5 conexiones:
 \image{8}{28}
 
 \section{Go-Between}
 Para evitar conflictos, deshabilitamos los balanceadores anteriores e instalamos \textbf{go-between} mediante \textbf{sudo snap install gobetween --edge}. Una vez instalado comprobamos el estado del servicio:
 \image{8}{29}
-Para configurar el algoritmo roundrobin editamos el archivo \textit{/var/snap/gobetween/common/gobetween.toml} como sigue:
+Para configurar el algoritmo round-robin editamos el archivo \textit{/var/snap/gobetween/common/gobetween.toml} como sigue:
 \image{6}{30}
 Además, para evitar errores, se ha desactivado el servidor de API REST y el servidor de ejemplo para UDP:
 \begin{figure}[H]
@@ -167,7 +167,7 @@ Además, para evitar errores, se ha desactivado el servidor de API REST y el ser
         \includegraphics[width=7cm]{../images/32.png}
     \end{subfigure}
 \end{figure}
-Para efectuar la configuración ejecutamos lo siguiente:
+Para lanzar el servicio ejecutamos lo siguiente:
 \image{8}{33}
 Y comprobamos desde el anfitrión:
 \image{8}{34}
@@ -176,7 +176,7 @@ Y comprobamos desde el anfitrión:
 \image{6}{35}
 Lanzamos el servicio y comprobamos desde el anfitrión:
 \image{8}{36}
-A diferencia de los anteriores balanceadores, que determinan el peso de cada máquina en roundrobin, en este caso la ponderación determina la probabilidad de ser elegida para servir una petición. Lo que implica que no tenemos asegurado que de las 3 peticiones, 2 vayan a ser servidas por m1.
+A diferencia de los anteriores balanceadores, que pueden usar a la vez ponderación y round-robin, en este caso los pesos determinan la probabilidad de ser elegida para servir una petición. Lo que implica que no tenemos asegurado que de las 3 peticiones, 2 vayan a ser servidas por m1.
 Para controlar el estado de los servidores finales, \textbf{go-between} hace uso del apartado \textbf{healthcheck}. Veamos con el siguiente ejemplo:
 \image{6}{37}
 Con esta configuración estamos indicando que se realice un chequeo sobre el estado de los servidores por cada 5 segundos mediante conexiones por \textbf{ping}. Si una conexión no se establece en 500 ms se considera una pérdida. Tras 3 pérdidas, se considerará que el servidor esta caído. Mientras que 2 conexiones exitosas a un servidor caído se considerará que se ha recuperado.  
@@ -184,7 +184,7 @@ Con esta configuración estamos indicando que se realice un chequeo sobre el est
 Para evitar conflicto con el siguiente balanceador, deshabilitamos \textbf{gobetween} con el comando \textbf{sudo snap disable gobetween}.
 
 \section{Pound}
-Actualmente no se puede instalar \textbf{pound} mediante \textbf{apt-get}, pero se ha encontrado un repositorio que almacena archivos para la instalación \textbf{pound}. Dado que la versión de nuestro Ubuntu es la 18, la versión de \textbf{pound} que nos funciona es la 2.6.
+Actualmente no se puede instalar \textbf{pound} mediante \textbf{apt-get}, pero se ha encontrado un repositorio que almacena archivos para la instalación de \textbf{pound}. Dado que la versión de nuestro Ubuntu es la 18, la versión de \textbf{pound} que nos funciona es la 2.6.
 
 Por tanto, descargamos el archivo \textit{pound\_2.6-2\_amd64.deb} de \url{http://old.kali.org/kali/pool/main/p/pound/} con el comando \textbf{curl -O http://old.kali.org/kali/pool/main/p/pound/pound\_2.6-2\_amd64.deb} e instalamos el paquete con \textbf{sudo dpkg -i pound\_2.6-2\_amd64.deb}. Una vez instalado podemos comprobar su estado:
 \image{8}{38}
@@ -204,13 +204,13 @@ Para establecer el balanceo por IP podemos utilizar el bloque \textbf{session}, 
 \image{8}{45}
 Comprobamos desde el anfitrión:
 \image{8}{46}
-Para controlar el estado de los servidores, se puede configurar las directivas globales \textbf{TimeOut} y \textbf{ConnTO} que establecen el tiempo que espera \textbf{Pound} para una respuesta del servidor y una conexión al servidor respectivamente. Estas directivas se pueden sobreescribir en cada servidor. Además, \textbf{Alive} determina cada cuánto tiempo \textbf{Pound} chequea el estado de los servidores. En nuestro caso asignamos los siguientes valores:
+Para controlar el estado de los servidores, se puede configurar las directivas globales \textbf{TimeOut} y \textbf{ConnTO} que establecen el tiempo que espera \textbf{Pound} para una respuesta del servidor y una conexión al servidor, respectivamente. Estas directivas se pueden sobreescribir en cada servidor. Además, \textbf{Alive} determina cada cuánto tiempo \textbf{Pound} chequea el estado de los servidores. En nuestro caso, asignamos los siguientes valores:
 \image{6}{47}
 
 \section{Someter a carga la granja web con AB}
 A partir de esta sección, se ha eliminado la configuración respecto al balanceo por IP de todos los balanceadores.
 
-En primer lugar instalamos \textbf{Apache Benchmark} en el anfitrión. Dado que en este caso el anfitrión tiene el sistema operativo Windows, se ha seguido los pasos del videotutorial \url{https://www.youtube.com/watch?v=hUZso9TpEes}.
+En primer lugar instalamos \textbf{Apache Benchmark} en el anfitrión. Dado que en este caso el anfitrión tiene el sistema operativo Windows, se han seguido los pasos del videotutorial \url{https://www.youtube.com/watch?v=hUZso9TpEes}.
 
 Una vez instalado probamos solicitar 10000 veces la página \textit{swap.html} en peticiones concurrentes de 10 en 10:
 \image{8}{48}
@@ -225,29 +225,29 @@ Aparte de las opciones \textbf{-n} y \textbf{-c} visto anteriormente, \textbf{ab
 \end{itemize}
 Como ejemplo utilizamos el siguiente comando:
 \image{8}{49}
-Podemos ver que en este caso ya no nos muestra el mensaje sobre el número de peticiones completas y si abrimos \textit{ejemplo.csv} tenemos lo siguiente (se muestra sólo una parte del csv):
+Podemos ver que en este caso ya no nos muestra el mensaje sobre el número de peticiones completadas y si abrimos \textit{ejemplo.csv} tenemos lo siguiente (se muestra sólo parte del csv):
 \image{6}{50}
 
 \section{Análisis comparativo de los balanceadores}
-A continuación presentamos los resultados de los balanceadores sometiéndolos a una carga de 10000 peticiones concurrentes de 10 en 10. Para cada balanceador se testea tanto con roundrobin como con ponderación con m1 el doble de carga que m2.
+A continuación presentamos los resultados de los balanceadores sometiéndolos a una carga de 10000 peticiones concurrentes de 10 en 10. Para cada balanceador se testea tanto con round-robin como con ponderación con m1 el doble de carga que m2.
  \begin{center}
     \begin{tabular}{|c|c|c|c|c|}
         \hline
         Balanceador & Algoritmo & Tiempo total (s) & Peticiones/s & Longest request (ms) \\
         \hline
-        Nginx & RoundRobin & 57.038 & 175.32 & 563 \\
+        Nginx & Round-robin & 57.038 & 175.32 & 563 \\
         \hline
         Nginx & Ponderación & 55.867 & 179.00 & 542 \\
         \hline
-        Haproxy & RoundRobin & 55.960 & 178.70 & 541 \\
+        Haproxy & Round-robin & 55.960 & 178.70 & 541 \\
         \hline
         Haproxy & Ponderación & 53.108 & 188.30 & 538 \\
         \hline
-        GoBetween & RoundRobin & 51.757 & 193.21 & 545 \\
+        GoBetween & Round-robin & 51.757 & 193.21 & 545 \\
         \hline
         GoBetween & Ponderación & 52.094 & 191.96 & 552 \\
         \hline
-        Pound & RoundRobin & 53.190 & 188.01 & 543 \\
+        Pound & Round-robin & 53.190 & 188.01 & 543 \\
         \hline
         Pound & Ponderación & 52.388 & 190.88 & 538 \\
         \hline
@@ -270,13 +270,13 @@ Puesto que el número de peticiones por segundo se puede obtener a partir del ti
             coordinates {(Nginx,57.038) (Haproxy,55.960) (GoBetween,51.757) (Pound,53.190)      (DUMMY, 0)};
         \addplot 
             coordinates {(Nginx,55.867) (Haproxy,53.108) (GoBetween,52.094) (Pound,52.388)      (DUMMY, 0)};    
-        \legend{RoundRobin,Ponderación}
+        \legend{Round-robin,Ponderación}
         \end{axis}
     \end{tikzpicture}
 \end{center}
-Podemos ver que en nuestro caso, \textbf{GoBetween} es el más rápido para ambos algoritmos, con casi 7 segundos de diferencia respecto de \textbf{Nginx} en el caso de usar RoundRobin.
+Podemos ver que en nuestro caso, \textbf{GoBetween} es el más rápido para ambos algoritmos, con casi 7 segundos de diferencia respecto de \textbf{Nginx} en el caso de usar round-robin.
 
-Cabe destacar que en el caso de \textbf{Nginx} y \textbf{Haproxy} el tiempo con RoundRobin es superior que el tiempo con ponderación y en el caso de \textbf{GoBetween} y \textbf{Pound} ocurre justo lo contrario. Esto puede deber a múltiples factores: retardos debido al sistema operativo del anfitrión, el funcionamiento del propio balanceador u otros motivos desconocidos. Pero lo lógico sería que RoundRobin funcionara mejor que ponderación pues en el caso de ponderación estamos cargando más a m1 cuando ambas máquinas son iguales.
+Cabe destacar que en el caso de \textbf{Nginx} y \textbf{Haproxy} el tiempo con round-robin es superior que el tiempo con ponderación, y en el caso de \textbf{GoBetween} y \textbf{Pound} ocurre justo lo contrario. Esto puede deberse a múltiples factores: retardos debido al sistema operativo del anfitrión, el funcionamiento del propio balanceador u otros motivos desconocidos. Pero lo lógico sería que round-robin funcionara mejor que ponderación, ya que en el caso de ponderación estamos cargando más a m1 cuando ambas máquinas son iguales.
 
 Finalmente, cabe destacar que este análisis no determina la superioridad de un balanceador respecto a los otros, pues se ha analizado solamente datos de un único benchmark para los dos algoritmos. Pero a partir de los resultados, vemos que en nuestro caso, \textbf{GoBetween} tiene el mejor rendimiento y \textbf{Nginx} el peor.
 
