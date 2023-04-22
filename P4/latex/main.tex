@@ -48,7 +48,7 @@
 \section{Certificado autoafirmado SSL}
 Empezamos habilitando el módulo SSL de Apache y creando el directorio para ubicar los certificados:
 \image{8}{1}
-Ahora creamos los certificados con los siguientes datos:
+Ahora creamos el certificado con los siguientes datos:
 \image{8}{2}
 \subsection{Opciones avanzadas}
 De las opciones introducidas anteriormente, podemos prescindir de \textbf{nodes} para añadir una contraseña a la clave. Además, tenemos las siguientes opciones que pueden ser interesantes:
@@ -59,7 +59,7 @@ De las opciones introducidas anteriormente, podemos prescindir de \textbf{nodes}
 \end{itemize}
 Como ejemplo creamos el siguiente certificado:
 \image{8}{5}
-Podemos ver que nos pide la contraseña para generar los certificados. Si eliminamos la opción \textbf{-subj} podemos ver que aparte de pedirnos la contraseña nos pide también el resto de informaciones:
+Podemos ver que nos pide la contraseña para generar el certificado. Si eliminamos la opción \textbf{-subj} podemos ver que aparte de pedirnos la contraseña nos pide también el resto de informaciones:
 \image{8}{6}
 
 \section{Apache con certificado SSL}
@@ -72,6 +72,30 @@ Para comprobar que se ha instalado correctamente el certificado accedemos desde 
 Accedemos al certificado desde el candado con exclamación a la izquierda de la URL:
 \image{8}{9}
 \image{12}{7}
+Ahora procedemos a copiar los archivos que hemos creado anteriormente a m2 y m3:
+\image{8}{10}
+Al igual que en m1, en m2 creamos el directorio \textit{/etc/apache2/ssl}, copiamos los archivos en dicho directorio y configuramos \textbf{default-ssl}:
+\image{8}{11}
+\image{8}{12}
+\image{8}{13}
+Podemos comprobar con \textbf{cURL} que m2 acepta peticiones HTTPS:
+\image{8}{14}
+
+\section{Nginx como balanceador para peticiones HTTPS}
+En m3 activamos \textbf{Nginx} y aseguramos de que esté en funcionamiento:
+\image{8}{15}
+Creamos un nuevo directorio \textit{ssl} para guardar los archivos:
+\image{8}{16}
+Editamos el archivo \textit{/etc/nginx/conf.d/default.conf} para añadir un nuevo bloque \textbf{server} con los siguientes datos:
+\image{8}{17}
+Reiniciamos \textbf{Nginx} y comprobamos desde el anfitrión:
+\image{8}{18}
+
+\subsection{Opciones avanzadas}
+A partir de la configuración anterior podemos añadir algunas mejoras. Puesto que las operaciones SSL consume recursos extras del CPU, existen dos maneras de minimizar el número de estas operaciones por cliente: la primera es habilitar la opción \textbf{keepalive} para poder mandar varias peticiones por conexión y la segunda es mediante la reutilización de parámetros de sesión SSL para evitar \textbf{ssl handshakes}. Dichas sesiones se almacenan en un cache que se configura con la directiva \textbf{ssl\_session\_cache}. El timeout por defecto de dicho caché es de 5 minutos, para modificarlo podemos utilizar la directiva \textbf{ssl\_session\_timeout}.
+
+En el siguiente ejemplo habilitamos un cache de tamaño 1MB con un timeout de 10 minutos:
+\image{8}{19}
 
 
 
@@ -91,7 +115,9 @@ Accedemos al certificado desde el candado con exclamación a la izquierda de la 
 \newpage
 \section{Bibliografía}
 \begin{itemize}
-    \item \url{https://linux.die.net/man/1/scp}
+    \item \url{https://www.openssl.org/docs/manmaster/man1/openssl-req.html}
+    
+
     \item \url{https://linux.die.net/man/1/tar}
     \item \url{https://serverfault.com/questions/141773/what-is-archive-mode-in-rsync}
     \item \url{https://ss64.com/bash/rsync.html}
