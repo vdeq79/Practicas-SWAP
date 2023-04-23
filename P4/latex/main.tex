@@ -97,32 +97,45 @@ A partir de la configuración anterior podemos añadir algunas mejoras. Puesto q
 En el siguiente ejemplo habilitamos un cache de tamaño 1MB con un timeout de 10 minutos:
 \image{8}{19}
 
+\section{IPTABLES}
+Comenzamos esta sección comprobando el estado del cortafuegos en m1:
+\image{8}{20}
+Para facilitar la configuración de todas las máquinas, creamos un script en m1 con los órdenes al que posteriormente copiaremos en las demás máquinas. Para una configuración con el que sólo se permita el tráfico HTTP y HTTPS creamos el siguiente script \textit{iptables.sh}:
+\image{8}{21}
+Ejecutamos el script con \textbf{sudo bash iptables.sh} y comprobamos desde el anfitrión:
+\image{8}{22}
+Sin embargo si intentamos hacer ping a m1:
+\image{8}{23}
+podemos ver que el tráfico no está permitido. Para configurar el cortafuegos en m2 y en m3, copiamos el script con \textbf{scp} y lo ejecutamos con \textbf{sudo bash}.
 
+\subsection{Opciones avanzadas}
+A partir del script anterior, podemos añadir órdenes para permitir SSH (puerto 2222 en m1 y m2 y 22 en m3) , PING y DNS:
+\image{8}{24}
+Si intentamos hacer ping ahora a m1:
+\image{8}{25}
+podemos ver que ésta vez se consigue sin problemas. Para que sólo se acepten peticiones HTTP y HTTPS provenientes de m3 en m1 y en m2, modificamos el apartado de HTTP y HTTPS en los scripts de m1 y m2 de la siguiente forma:
+\image{8}{26}
+Comprobamos desde el anfitrión:
+\image{8}{27}
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}{.5\textwidth}
-        \centering
-%        \includegraphics[width=7cm]{../images/13.png}
-    \end{subfigure}%
-    \begin{subfigure}{.5\textwidth}
-        \centering
-%        \includegraphics[width=7cm]{../images/14.png}
-    \end{subfigure}
-\end{figure}
-
+\subsection{Hacer persistente reglas IPTABLES}
+Para que las reglas se mantengan tras el reinicio de las máquinas, necesitamos instalar en primer lugar la herramienta \textbf{iptables-persistent}:
+\image{8}{28}
+Al responder sí para continuar nos muestra la siguiente vista:
+\image{8}{29}
+El cuál nos pregunta si queremos guardar la configuración actual. Le damos que sí y nos aparecerá otra vista similar para ip6, respondemos que sí de nuevo y se finalizará la instalación. 
+Si en algún momento volvemos a modificar el cortafuegos podemos actualizar la configuración persistente utilizando \textbf{sudo bash -c \enquote{iptables-save \textgreater /etc/iptables/rules.v4}} y \textbf{sudo bash -c \enquote{ip6tables-save \textgreater /etc/iptables/rules.v6}}. 
 
 \newpage
 \section{Bibliografía}
 \begin{itemize}
     \item \url{https://www.openssl.org/docs/manmaster/man1/openssl-req.html}
-    
-
-    \item \url{https://linux.die.net/man/1/tar}
-    \item \url{https://serverfault.com/questions/141773/what-is-archive-mode-in-rsync}
-    \item \url{https://ss64.com/bash/rsync.html}
-    \item \url{https://linux.die.net/man/1/rsync}
-    \item \url{https://serverfault.com/questions/123629/run-task-every-90-minutes-with-cron}
+    \item \url{http://nginx.org/en/docs/http/configuring_https_servers.html}
+    \item \url{http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache}
+    \item \url{https://linux.die.net/man/8/iptables}
+    \item \url{https://www.layerstack.com/resources/tutorials/How-to-enable-and-disable-Ping-from-IPTables-on-Linux-Cloud-Servers}
+    \item \url{https://linuxconfig.org/how-to-make-iptables-rules-persistent-after-reboot-on-linux}
+    \item \url{https://askubuntu.com/questions/230476/how-to-solve-permission-denied-when-using-sudo-with-redirection-in-bash}
 \end{itemize}
 
 \end{document}
