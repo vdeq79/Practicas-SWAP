@@ -46,7 +46,7 @@
 \newpage
 
 \section{Certificado autoafirmado SSL}
-Empezamos habilitando el módulo SSL de Apache y creando el directorio para ubicar los certificados:
+Empezamos habilitando el módulo SSL de Apache y creando el directorio para ubicar el certificado:
 \image{8}{1}
 Ahora creamos el certificado con los siguientes datos:
 \image{8}{2}
@@ -92,7 +92,7 @@ Reiniciamos \textbf{Nginx} y comprobamos desde el anfitrión:
 \image{8}{18}
 
 \subsection{Opciones avanzadas}
-A partir de la configuración anterior podemos añadir algunas mejoras. Puesto que las operaciones SSL consume recursos extras del CPU, existen dos maneras de minimizar el número de estas operaciones por cliente: la primera es habilitar la opción \textbf{keepalive} para poder mandar varias peticiones por conexión y la segunda es mediante la reutilización de parámetros de sesión SSL para evitar \textbf{ssl handshakes}. Dichas sesiones se almacenan en un cache que se configura con la directiva \textbf{ssl\_session\_cache}. El timeout por defecto de dicho caché es de 5 minutos, para modificarlo podemos utilizar la directiva \textbf{ssl\_session\_timeout}.
+A partir de la configuración anterior podemos añadir algunas mejoras. Puesto que las operaciones SSL consumen recursos extras del CPU, existen dos maneras de minimizar el número de operaciones por cliente: la primera es habilitar la opción \textbf{keepalive} para poder mandar varias peticiones por conexión y la segunda es mediante la reutilización de parámetros de sesión SSL para evitar \textbf{ssl handshakes}. Dichas sesiones se almacenan en un cache que se configura con la directiva \textbf{ssl\_session\_cache}. El timeout por defecto de dicho caché es de 5 minutos, para modificarlo podemos utilizar la directiva \textbf{ssl\_session\_timeout}.
 
 En el siguiente ejemplo habilitamos un cache de tamaño 1MB con un timeout de 10 minutos:
 \image{8}{19}
@@ -100,7 +100,7 @@ En el siguiente ejemplo habilitamos un cache de tamaño 1MB con un timeout de 10
 \section{IPTABLES}
 Comenzamos esta sección comprobando el estado del cortafuegos en m1:
 \image{8}{20}
-Para facilitar la configuración de todas las máquinas, creamos un script en m1 con los órdenes al que posteriormente copiaremos en las demás máquinas. Para una configuración con el que sólo se permita el tráfico HTTP y HTTPS creamos el siguiente script \textit{iptables.sh}:
+Para facilitar la configuración, creamos un script en m1 con los órdenes al que posteriormente copiaremos en las demás máquinas. Para una configuración con el que sólo se permita el tráfico HTTP y HTTPS creamos el siguiente script \textit{iptables.sh}:
 \image{8}{21}
 Ejecutamos el script con \textbf{sudo bash iptables.sh} y comprobamos desde el anfitrión:
 \image{8}{22}
@@ -124,7 +124,7 @@ Para que las reglas se mantengan tras el reinicio de las máquinas, necesitamos 
 Al responder sí para continuar nos muestra la siguiente vista:
 \image{8}{29}
 El cuál nos pregunta si queremos guardar la configuración actual. Le damos que sí y nos aparecerá otra vista similar para ip6, respondemos que sí de nuevo y se finalizará la instalación. 
-Si en algún momento volvemos a modificar el cortafuegos podemos actualizar la configuración persistente utilizando \textbf{sudo bash -c \enquote{iptables-save \textgreater /etc/iptables/rules.v4}} y \textbf{sudo bash -c \enquote{ip6tables-save \textgreater /etc/iptables/rules.v6}}. 
+Si en algún momento modificamos el cortafuegos podemos actualizar la configuración persistente utilizando \textbf{sudo bash -c \enquote{iptables-save \textgreater /etc/iptables/rules.v4}} y \textbf{sudo bash -c \enquote{ip6tables-save \textgreater /etc/iptables/rules.v6}}. 
 
 \newpage
 \section{Bibliografía}
