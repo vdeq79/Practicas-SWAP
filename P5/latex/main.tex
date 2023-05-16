@@ -1,0 +1,106 @@
+\documentclass[twoside]{article}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{tikz}
+\usepackage{centernot}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{lipsum}
+\usepackage{subcaption}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+\usepackage{xurl}
+\usepackage[top=1in, bottom=1.5in, left=1in, right=1in]{geometry}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{\leftmark}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\newcommand{\enquote}[1]{``#1''}
+\usepackage{float}
+\usepackage[parfill]{parskip}
+\newcommand{\image}[2]{
+\begin{figure}[H]
+    \includegraphics[width=#1 cm]{../images/#2.png}
+    \centering
+\end{figure}
+}
+
+\title{Práctica 5 SWAP}
+\author{XuSheng Zheng}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Base de datos MySQL}
+Empezaremos creando una base de datos en MySQL en m1:
+\image{10}{1}
+Probamos crear una nueva tabla e insertar datos:
+\image{10}{2}
+
+\subsection{Opciones avanzadas}
+Además, podemos modificar la tabla una vez que se ha creado. Por ejemplo, introduciendo un campo más:
+\image{10}{3}
+Y podemos actualizar la fila que habíamos introducido con un valor para este campo nuevo:
+\image{10}{4}
+También podemos eliminar dicho campo:
+\image{10}{5}
+
+\section{Mysqldump}
+En esta sección vamos a replicar la base de datos de m1 en m2. Para ello necesitamos primero desactivar las configuraciones de cortafuegos que realizamos en la práctica anterior. Lo podemos hacer fácilmente ejecutando el siguiente script:
+\image{6}{6}
+Tras ejecutar el script entramos en la base de datos de m1 para evitar que se actualice la base de datos mientras estamos realizando la copia de seguridad:
+\image{10}{7}
+Ahora ya podemos realizar la copia:
+\image{10}{8}
+Tras finalizar la copia tenemos que desbloquear las tablas que habíamos bloqueado anteriormente:
+\image{10}{9}
+Ahora vamos a copiar a m2 el archivo \textit{.sql} que hemos generado:
+\image{10}{10}
+Ahora creamos en m2 una base de datos con el mismo nombre:
+\image{10}{11}
+Volcamos los datos que hemos traído desde m1 en m2 y comprobamos:
+\image{10}{12}
+
+\subsection{Opciones avanzadas}
+Mysqldump admite una gran variedad de opciones, algunas de las que nos pueden servir son:
+\begin{itemize}
+    \item \textbf{--databases}: permite copiar varias bases de datos a la vez. Usando esta opción también estamos permitiendo que se crean automáticamente las bases de datos si no existen.
+    \item \textbf{--all-databases}: similar al anterior pero con todas las bases de datos.
+    \item \textbf{--lock-tables}: bloquea las tablas de las bases de datos durante la copia. Cabe destacar que realiza el bloqueo sobre cada base de datos que se está realizando la copia, luego tablas en distintas bases de datos pueden terminar copiándose en diferentes estados.
+    \item \textbf{--lock-all-tables}: bloquea todas las tablas de todas las bases de datos.
+    \item \textbf{-v}: nos muestra los detalles del proceso de copia.
+\end{itemize}
+Para probar estas opciones podemos hacer la siguiente prueba:
+\image{10}{13}
+
+
+
+\newpage
+\section{Bibliografía}
+\begin{itemize}
+    \item \url{https://linux.die.net/man/1/mysqldump}
+    
+    
+    \item \url{http://nginx.org/en/docs/http/configuring_https_servers.html}
+    \item \url{http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache}
+    \item \url{https://linux.die.net/man/8/iptables}
+    \item \url{https://www.layerstack.com/resources/tutorials/How-to-enable-and-disable-Ping-from-IPTables-on-Linux-Cloud-Servers}
+    \item \url{https://linuxconfig.org/how-to-make-iptables-rules-persistent-after-reboot-on-linux}
+    \item \url{https://askubuntu.com/questions/230476/how-to-solve-permission-denied-when-using-sudo-with-redirection-in-bash}
+\end{itemize}
+
+\end{document}
