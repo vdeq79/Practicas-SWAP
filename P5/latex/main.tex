@@ -87,20 +87,59 @@ Mysqldump admite una gran variedad de opciones, algunas de las que nos pueden se
 Para probar estas opciones podemos hacer la siguiente prueba:
 \image{10}{13}
 
+\section{Configuración Maestro-Esclavo}
+En esta sección, vamos a configurar una replicación maestro-esclavo entre las máquinas m1 y m2 siendo m1 el maestro. Para ello, editamos como root el archivo \textit{/etc/mysql/mysql.conf.d/mysqld.cnf} comentado el parámetro bind-address y especificando el id del servidor y el registro binario:
+\image{10}{14}
+Guardamos el documento y reiniciamos el servicio con \textbf{sudo service mysql restart}. En m2 realizamos un cambio similar cambiando el id del servidor por 2:
+\image{10}{15}
+Reiniciamos el servicio en m2 y volvemos a m1 para crear un usuario encargado de realizar la replicación. Puesto que en este caso la versión de MySQL es la 8.0.32, ejecutamos los siguientes órdenes:
+\image{10}{16}
+Utilizamos la sentencia \textbf{mysql\_native\_password} para evitar posibles errores respecto a la autentificación. Para terminar con la configuración en el maestro, comprobamos:
+\image{10}{17}
+Pasamos ahora a configurar m2. En primer lugar introducimos los datos del maestro que hemos obtenido con la sentencia anterior y arrancamos el esclavo:
+\image{10}{18}
+Por último, volvemos al maestro para activar las tablas:
+\image{10}{20}
+Podemos comprobar el estado del esclavo usamos la orden \textbf{SHOW SLAVE STATUS\textbackslash G}:
+\image{10}{21}
+Vemos que la variable \textbf{Seconds\_Behind\_Master} es 0, lo que indica que no hay ningún error. Si hubiese algún error, tendremos un número distinto del 0 en la variable \textbf{Last\_IO\_Errno} y en \textbf{Last\_IO\_Error} nos indicaría los detalles del error. 
+
+Procedemos ahora a realizar una pequeña prueba. Introduciremos una fila nueva en la tabla de datos en m1:
+\image{10}{22}
+Y comprobamos en m2:
+\image{10}{23}
+En este caso la primera consulta es anterior a la inserción en m1. Podemos ver que los datos se han sincronizado satisfactoriamente. 
+
+\section{Configuración Maestro-Maestro}
+Acabamos de configurar las dos máquinas de forma que los cambios que realicemos en m1 se sincronizarán en m2. Sin embargo, si los cambios se realizaran en m2, no se sincronizarían automáticamente en m1. Para resolver este problema, vamos a repetir el proceso anterior con m2 como maestro, y así tener una configuración maestro-maestro.
+
+Puesto que ya hemos configurado el archivo \textit{/etc/mysql/mysql.conf.d/mysqld.cnf}, comenzamos directamente creando el usuario esclavo. Puesto que el usuario esclavo de m1 se ha sincronizado también, vamos a crear el usuario con otro nombre:
+\image{10}{24}
+Consultamos los datos del maestro:
+\image{10}{25}
+Ahora pasamos a m1 para configurar el esclavo:
+\image{10}{26}
+Y comprobamos si ha habido algún error:
+\image{10}{27}
+Puesto que la variable \textbf{Seconds\_Behind\_Master} es 0, no ha habido ningún error. Ahora podemos probar borrando desde m2 la fila que hemos creado anteriormente:
+\image{10}{28}
+Consultando desde m1:
+\image{10}{29}
+Podemos ver que la sincronización se ha llevado a cabo correctamente.
+
+\section{Configurar IPTABLES para puerto 3306}
+Para las secciones anteriores, hemos tenido que desactivar las reglas IPTABLES que habíamos configurado en la práctica anterior y durante todo este tiempo, hemos estado expuestos. Para resolver este problema, vamos a configurar IPTABLES para permitir la conexión entre ambas máquinas por el puerto 3306. En primer lugar, añadimos al script que habíamos creado en la práctica anterior las siguientes líneas:
+\image{10}{30}
+Añadimos las mismas líneas para el script de m2 cambiando el IP de las líneas. Ejecutamos las reglas y si no ha habido ningún error los hacemos persistentes:
+\image{10}{31}
 
 
 \newpage
 \section{Bibliografía}
 \begin{itemize}
     \item \url{https://linux.die.net/man/1/mysqldump}
+    \item \url{https://stackoverflow.com/questions/49194719/authentication-plugin-caching-sha2-password-cannot-be-loaded}
     
-    
-    \item \url{http://nginx.org/en/docs/http/configuring_https_servers.html}
-    \item \url{http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache}
-    \item \url{https://linux.die.net/man/8/iptables}
-    \item \url{https://www.layerstack.com/resources/tutorials/How-to-enable-and-disable-Ping-from-IPTables-on-Linux-Cloud-Servers}
-    \item \url{https://linuxconfig.org/how-to-make-iptables-rules-persistent-after-reboot-on-linux}
-    \item \url{https://askubuntu.com/questions/230476/how-to-solve-permission-denied-when-using-sudo-with-redirection-in-bash}
 \end{itemize}
 
 \end{document}
